@@ -6,14 +6,12 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.location.*;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.text.Html;
 import android.text.SpannedString;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewParent;
+import android.view.*;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -56,7 +54,8 @@ public class MainActivityGve extends FragmentActivity implements
     private float m_AvgSpeed = 0.0f;
     private boolean m_bDoDraw = false;
     private List<Float> m_SpeedList = null;
-    private boolean m_bIsVisible = false;
+    private boolean m_bIsVisible = false; // is app visible or not?
+    private boolean m_bIsZoomingIn = false; // has user done a zoomin of the map?
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -440,6 +439,28 @@ public class MainActivityGve extends FragmentActivity implements
         ShowNewLocationInMap(location);
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent ev) {
+        final int action = ev.getAction();
+        switch (action) {
+            case MotionEvent.ACTION_DOWN: {
+                if (!m_bIsZoomingIn) {
+                    m_bIsZoomingIn = true;
+
+                    Handler handler = new Handler();
+                    Runnable r = new Runnable() {
+                        public void run() {
+                            m_bIsZoomingIn = false;
+                        }
+                    };
+                    handler.postDelayed(r, 5000);
+                }
+            }
+        }
+
+        return true;
+    }
+
     private void ShowNewLocationInMap(Location location) {
         if (location != null) {
 		/*
@@ -501,10 +522,12 @@ public class MainActivityGve extends FragmentActivity implements
                     m_bFirstTime = false;
                 }
 
-                m_googleMap
-                        .animateCamera(CameraUpdateFactory.newLatLngZoom(
-                                new LatLng(location.getLatitude(), location
-                                        .getLongitude()), 15.0f));
+                if (!m_bIsZoomingIn) {
+                    m_googleMap
+                            .animateCamera(CameraUpdateFactory.newLatLngZoom(
+                                    new LatLng(location.getLatitude(), location
+                                            .getLongitude()), 15.0f));
+                }
 
                 // writeToFile(location);
 
