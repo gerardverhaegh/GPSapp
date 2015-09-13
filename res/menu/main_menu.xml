@@ -25,6 +25,7 @@
 	<item
 		android:id="@+id/action_setmaptype"
         android:orderInCategory="5"
+        android:visible="false"
 		android:title="@string/action_setmaptype"><menu xmlns:android="http://schemas.android.com/apk/res/android">
 		<item android:id="@+id/action_MAP_TYPE_NORMAL" android:title="Normal" />
 		<item android:id="@+id/action_MAP_TYPE_HYBRID" android:title="Hybrid" />

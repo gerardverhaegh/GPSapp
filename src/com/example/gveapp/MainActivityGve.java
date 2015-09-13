@@ -1,6 +1,8 @@
 package com.example.gveapp;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
@@ -32,8 +34,7 @@ import java.util.List;
  import android.R;
  */
 
-public class MainActivityGve extends FragmentActivity implements
-        LocationListener {
+public class MainActivityGve extends FragmentActivity implements LocationListener {
     private static final int PICKFILE_RESULT_CODE = 1;
     private static Boolean m_bEnableGPS = true;
     private static Boolean m_bEnableRoute = false;
@@ -169,8 +170,6 @@ public class MainActivityGve extends FragmentActivity implements
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
-        MenuItem mi = null;
-
         // respond to menu item selection
         switch (item.getItemId()) {
             case R.id.action_routegraph:
@@ -190,7 +189,7 @@ public class MainActivityGve extends FragmentActivity implements
 				 * list_of_geopoints.size());
 				 */
                 } catch (Exception e) {
-
+                    // nothing
                 }
                 return true;
             case R.id.action_weather:
@@ -217,8 +216,8 @@ public class MainActivityGve extends FragmentActivity implements
                             .show();
                 }
                 return true;
-			/*
-			 * case R.id.action_routegraph: try { Intent i = new
+            /*
+             * case R.id.action_routegraph: try { Intent i = new
 			 * Intent(getApplicationContext(), RouteGraph.class);
 			 * startActivity(i); } catch (Exception e) {
 			 * Toast.makeText(getApplicationContext(), "exception",
@@ -243,18 +242,43 @@ public class MainActivityGve extends FragmentActivity implements
                 m_sRoute = "Route_" + GetDateTimeString();
                 return true;*/
             case R.id.action_route:
-                m_bEnableRoute = !m_bEnableRoute;
-
-                mi = m_menu.findItem(R.id.action_route);
                 if (m_bEnableRoute) {
-                    mi.setTitle(getString(R.string.action_stop_route));
-                } else {
-                    mi.setTitle(getString(R.string.action_start_route));
+                    SetRouting(null);
                 }
+                else
+                {
+                    // start a new route
+                    DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            switch (which) {
+                                case DialogInterface.BUTTON_POSITIVE:
+                                    // new route file
+                                    SetRouting(null);
+                                    break;
 
-                m_sRoute = "Route_" + GetDateTimeString();
+                                case DialogInterface.BUTTON_NEGATIVE:
+                                    // append route file
+                                    try {
+                                        Intent i = new Intent(getApplicationContext(),
+                                                FileBrowser.class);
+                                        i.putExtra("Path", sAppPath);
+                                        i.putExtra("Filter", "Route");
+                                        i.putExtra("GetFileNameOnly", true);
+                                        startActivityForResult(i, 1);
+                                    } catch (Exception e) {
+                                        // nothing
+                                    }
+                                    break;
+                            }
+                        }
+                    };
 
-                SetTitleBackgroundColor(m_bEnableRoute ? Color.RED : Color.GREEN);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setMessage("Do you want to start a new route or append to an old route ?")
+                            .setPositiveButton("New", dialogClickListener)
+                            .setNegativeButton("Append", dialogClickListener).show();
+                }
 
                 return true;
             case R.id.action_exit:
@@ -262,7 +286,7 @@ public class MainActivityGve extends FragmentActivity implements
                 System.exit(1);
 
 			/*
-			 * Intent intent = new Intent(Intent.ACTION_MAIN);
+             * Intent intent = new Intent(Intent.ACTION_MAIN);
 			 * intent.addCategory(Intent.CATEGORY_HOME);
 			 * intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 			 * startActivity(intent);
@@ -289,6 +313,28 @@ public class MainActivityGve extends FragmentActivity implements
         }
     }
 
+    private void SetRouting(String filename) {
+        m_bEnableRoute = !m_bEnableRoute;
+        MenuItem mi = null;
+        mi = m_menu.findItem(R.id.action_route);
+        if (m_bEnableRoute) {
+            mi.setTitle(getString(R.string.action_stop_route));
+        } else {
+            mi.setTitle(getString(R.string.action_start_route));
+        }
+
+        if (m_bEnableRoute) {
+            if (filename == null) {
+                m_sRoute = "Route_" + GetDateTimeString();
+            } else {
+                m_sRoute = filename;
+            }
+            Log.d("GPS", "filename: " + m_sRoute);
+        }
+
+        SetTitleBackgroundColor(m_bEnableRoute ? Color.RED : Color.GREEN);
+    }
+
     private void SetTitleBackgroundColor(int color) {
         // set title background color
         View titleView = getWindow().findViewById(android.R.id.title);
@@ -313,7 +359,7 @@ public class MainActivityGve extends FragmentActivity implements
         switch (requestCode) {
             case 0:
                 if (resultCode == RESULT_OK) {
-                    String sFilename = data.getStringExtra("MESSAGE");
+                    String sFilename = data.getStringExtra("FILENAME");
 
                     // Toast.makeText(getApplicationContext(), sFilename,
                     // Toast.LENGTH_LONG).show();
@@ -361,6 +407,16 @@ public class MainActivityGve extends FragmentActivity implements
                     startActivity(i);
 
                 }
+                break;
+            case 1:
+                String sFilename = data.getStringExtra("FILENAME");
+
+                if (sFilename.endsWith(".txt")) {
+                    SetRouting(sFilename);
+                } else {
+                    Toast.makeText(getApplicationContext(), "Filename has not correct extension", Toast.LENGTH_LONG).show();
+                }
+
                 break;
         }
     }
@@ -906,4 +962,5 @@ public class MainActivityGve extends FragmentActivity implements
 	 * 
 	 * }
 	 */
+
 }
