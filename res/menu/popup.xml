@@ -1,0 +1,15 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+	
+    <item
+        android:id="@+id/action_show"
+        android:title="@string/action_show" 
+		android:showAsAction="never"/> 
+    <item
+        android:id="@+id/action_email"
+        android:title="@string/action_email"
+        android:showAsAction="never"/> 
+    <item
+        android:id="@+id/action_delete"
+        android:title="@string/action_delete"
+        android:showAsAction="never"/> 
+</menu>
